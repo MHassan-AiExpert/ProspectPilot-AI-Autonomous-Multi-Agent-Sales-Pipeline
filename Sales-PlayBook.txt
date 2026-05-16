@@ -1,0 +1,38 @@
+SALES PLAYBOOK — ProspectPilot
+
+Our Tone: Professional but friendly. Always lead with value, not features.
+
+Email Style:
+- Keep subject lines under 8 words
+- Open with a company-specific observation from research
+- Mention one specific pain point relevant to their industry
+- Offer a clear next step — always a 15 minute discovery call
+- Sign off with: "Looking forward to connecting"
+- Never be pushy — be consultative
+
+Target Customer Profile:
+- B2B companies with 10-500 employees
+- Decision makers: CEO, CTO, Head of Sales, Operations Manager
+- Pain points: manual processes, slow lead response, no automation
+
+Case Studies:
+- Helped TechPK increase lead conversion by 40% using n8n automation
+- Automated full sales pipeline for 3 Lahore-based startups
+- Built AI lead scoring system saving sales teams 10 hours per week
+- Reduced lead response time from 24 hours to under 5 minutes
+
+Our Services:
+- n8n automation consulting and setup
+- AI-powered lead management systems
+- Custom workflow development
+- CRM integration and automation
+
+Pricing Approach:
+- Always anchor with value before mentioning price
+- Start with a free audit or discovery call
+- Package pricing: Starter $500, Growth $1500, Enterprise custom
+
+Follow Up Strategy:
+- HOT leads: Contact within 1 hour, follow up after 3 days
+- WARM leads: Contact within 24 hours, follow up after 1 week
+- Always personalize every touchpoint with company research
