@@ -1,7 +1,6 @@
 🤖 ProspectPilot AI — Autonomous Multi-Agent Sales Pipeline
 
-An advanced AI-powered B2B sales automation system built with n8n
- that researches prospects, scores leads using real company data, retrieves knowledge from a Pinecone RAG system, writes hyper-personalized outreach emails, verifies deliverability, and automatically manages CRM workflows — all in under 30 seconds.
+An advanced AI-powered B2B sales automation system built with n8n that researches prospects, scores leads using real company data, retrieves knowledge from a Pinecone RAG system, writes hyper-personalized outreach emails, verifies deliverability, and automatically manages CRM workflows — all in under 30 seconds.
 
 Built using a true Multi-Agent AI Architecture with:
 
@@ -9,6 +8,7 @@ Built using a true Multi-Agent AI Architecture with:
 🧠 AI Lead Scoring Agent
 📚 RAG Retrieval Agent
 ✍️ AI Email Writer Agent
+
 🚀 Features
 
 ✅ Autonomous AI Lead Qualification
@@ -26,6 +26,7 @@ Built using a true Multi-Agent AI Architecture with:
 ✅ Fully Automated End-to-End Pipeline
 
 ⚡ End-to-End Workflow
+
 Lead Submission (Webhook)
         ↓
 🔍 Research Agent (Serper API)
@@ -43,6 +44,7 @@ Switch Routing
 🔥 HOT  → Gmail + Slack + Notion + Sheets
 🟡 WARM → Slack + Notion + Sheets
 ❄️ COLD → Google Sheets Log Only
+
 🧠 Multi-Agent AI Architecture
 
 Unlike traditional workflows using a single AI node, ProspectPilot uses multiple specialized AI agents working together as a coordinated AI sales team.
@@ -60,6 +62,7 @@ Unlike traditional workflows using a single AI node, ProspectPilot uses multiple
 │  ✍️ AI Email Writer Agent                    │
 │                                              │
 └──────────────────────────────────────────────┘
+
 📚 RAG (Retrieval Augmented Generation)
 
 ProspectPilot uses a real RAG pipeline powered by:
@@ -82,28 +85,23 @@ inside Pinecone vector storage.
 Before writing outreach emails, the AI retrieves the most relevant playbook sections and injects them into prompts for highly personalized generation.
 
 🛠️ Tech Stack
+
 Core Automation
-n8n
- — Workflow Automation Engine
+n8n — Workflow Automation Engine
+
 AI & Intelligence
-Google Gemini AI
- — Multi-Agent Reasoning
-Pinecone
- — Vector Database
-Serper API
- — Google Search Research
+Google Gemini AI — Multi-Agent Reasoning
+Pinecone — Vector Database
+Serper API — Google Search Research
 Gemini Embeddings — Semantic Vector Generation
+
 Integrations
-Slack API
- — Team Notifications
-Notion API
- — CRM Management
-Google Sheets API
- — Lead Logging
-Gmail API
- — Automated Outreach
-ZeroBounce
- — Email Verification
+Slack API — Team Notifications
+Notion API — CRM Management
+Google Sheets API — Lead Logging
+Gmail API — Automated Outreach
+ZeroBounce — Email Verification
+
 🔍 Agent 1 — Research Agent
 
 Uses Serper API to search Google for:
@@ -114,10 +112,7 @@ B2B signals
 market positioning
 business context
 
-Example Query:
-
-Microsoft company overview B2B
-
+Example Query: Microsoft company overview B2B
 This gives downstream AI agents real company intelligence before scoring leads.
 
 🧠 Agent 2 — AI Lead Scoring Agent
@@ -130,13 +125,13 @@ company research
 business signals
 
 Returns structured JSON:
-
 {
   "score": "HOT",
   "reason": "Corporate email with strong B2B signals",
   "email_draft": "Personalized outreach email",
   "next_action": "Send email immediately"
 }
+
 📚 Agent 3 — Pinecone RAG Retrieval Agent
 
 The RAG agent:
@@ -144,13 +139,19 @@ The RAG agent:
 converts sales playbook into embeddings
 stores vectors in Pinecone
 retrieves relevant chunks during email generation
+
 Pinecone Configuration
-Setting	Value
-Index Name	smartlead-rag
-Dimensions	3072
-Metric	cosine
-Cloud	AWS
-Region	us-east-1
+
+| Setting    | Value         |
+| ---------- | ------------- |
+| Index Name | smartlead-rag |
+| Dimensions | 3072          |
+| Metric     | cosine        |
+| Cloud      | AWS           |
+| Region     | us-east-1     |
+
+
+
 ✍️ Agent 4 — AI Email Writer Agent
 
 Combines:
@@ -167,16 +168,17 @@ reference company news
 follow playbook tone
 remain consultative
 avoid generic AI language
+
 ✅ Email Verification Layer
 
-Before auto-sending emails, ProspectPilot validates deliverability using ZeroBounce
-.
+Before auto-sending emails, ProspectPilot validates deliverability using ZeroBounce.
 
 Validation prevents:
 
 bounce damage
 spam reputation issues
 invalid outreach
+
 📋 Automated CRM Management
 
 Every HOT and WARM lead is automatically:
@@ -208,6 +210,7 @@ screenshots/google-sheets-log.png
 screenshots/pinecone-dashboard.png
 ✅ ZeroBounce Email Validation
 screenshots/zerobounce-output.png
+
 🔄 Workflow Architecture
 Webhook Trigger
       ↓
@@ -228,15 +231,16 @@ Email Validation
 HOT / WARM / COLD Routing
       ↓
 CRM + Notifications + Logging
+
 📡 API Example
-Request
+Request:
 {
   "name": "Sara Khan",
   "email": "sara@microsoft.com",
   "company": "Microsoft",
   "source": "LinkedIn"
 }
-Response
+Response:
 {
   "score": "HOT",
   "reason": "Corporate email with strong B2B signals",
@@ -252,7 +256,6 @@ ProspectPilot AI.json
 ProspectPilot AI RAG Ingestion.json
 
 into your n8n workspace.
-
 2️⃣ Configure Credentials
 
 Required credentials:
@@ -268,25 +271,21 @@ ZeroBounce API
 3️⃣ Configure Pinecone
 
 Create index:
-
 Index Name: smartlead-rag
 Dimensions: 3072
 Metric: cosine
 Cloud: AWS
 Region: us-east-1
+
 4️⃣ Run RAG Ingestion Workflow
 
-Execute:
-
-ProspectPilot AI RAG Ingestion
+Execute: ProspectPilot AI RAG Ingestion
 
 This uploads your sales playbook into Pinecone vector storage.
 
 5️⃣ Activate Main Workflow
 
-Activate:
-
-ProspectPilot AI
+Activate: ProspectPilot AI
 
 Your autonomous AI sales pipeline is now live.
 
@@ -313,3 +312,10 @@ prompt engineering
 automation architecture
 API integrations
 production-grade AI systems
+
+📄 License
+
+MIT License — Free to use and modify.
+
+
+
