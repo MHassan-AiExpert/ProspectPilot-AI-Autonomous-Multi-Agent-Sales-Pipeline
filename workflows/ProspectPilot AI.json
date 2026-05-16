@@ -1,0 +1,1147 @@
+{
+  "name": "ProspectPilot AI",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "09b59d19-04b2-4c31-aaa2-8e1336af35c3",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "8afa30a5-81aa-4463-93a1-0ce887e3f198",
+      "name": "Webhook",
+      "webhookId": "09b59d19-04b2-4c31-aaa2-8e1336af35c3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://google.serper.dev/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"q\": \"{{ $('Webhook').item.json.body.company }} company overview B2B\",\n  \"num\": 5\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "2ea05fc9-ce86-45da-8d57-2b1ff5d9924e",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LCwmH7TCoEmFqKAK",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = $input.item.json.organic;\n\nconst summary = results.map((r, i) => \n  `${i + 1}. ${r.title}: ${r.snippet}`\n).join('\\n');\n\nreturn {\n  research_summary: summary,\n  company: $('Webhook').item.json.body.name,\n  email: $('Webhook').item.json.body.email,\n  source: $('Webhook').item.json.body.source\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "e53c2572-6288-48f8-b811-1416fb59e9f4",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Lead Information:\nName: {{ $('Webhook').item.json.body.name }}\nEmail: {{ $('Webhook').item.json.body.email }}\nCompany: {{ $('Webhook').item.json.body.company }}\nSource: {{ $('Webhook').item.json.body.source }}\n\nCompany Research:\n{{ $json.research_summary }}\n\nScore this lead and write a personalized email using the research above.",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are an expert B2B sales analyst. You will be given lead  information AND real research data about their company.  Use the research to make a more accurate scoring decision.  Scoring rules: - HOT: Corporate email, LinkedIn/referral source, established company with B2B signals - WARM: Real company but generic email, or small/unclear company - COLD: Gmail/Yahoo personal email, unknown company, no B2B signals  Always return only raw JSON — no markdown, no explanation: {   \"score\": \"HOT\",   \"reason\": \"explanation here\",   \"email_draft\": \"personalized email referencing their company research\",   \"next_action\": \"what to do next\" }"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        624,
+        0
+      ],
+      "id": "902f64d2-925e-4881-9d6a-e2401564328a",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        208
+      ],
+      "id": "04db0e7b-7eaf-4248-be1e-3240b1704da7",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "aeRYShlomstXUfJC",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = $input.item.json.text;\nconst cleaned = text.replace(/```json|```/g, '').trim();\nconst parsed = JSON.parse(cleaned);\n\nreturn {\n  score: parsed.score,\n  reason: parsed.reason,\n  email_draft: parsed.email_draft,\n  next_action: parsed.next_action,\n  name: $('Webhook').item.json.body.name,\n  email: $('Webhook').item.json.body.email,\n  company: $('Webhook').item.json.body.company,\n  source: $('Webhook').item.json.body.source\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        976,
+        0
+      ],
+      "id": "e3d058f9-2dd8-4c5b-ae15-ca33ce66250e",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Write a personalized sales email for:\nName: {{ $('Code in JavaScript1').item.json.name }}\nCompany: {{ $('Code in JavaScript1').item.json.company }}\nScore: {{ $('Code in JavaScript1').item.json.score }}\nReason: {{ $('Code in JavaScript1').item.json.reason }}\nResearch: {{ $('Code in JavaScript').item.json.research_summary }}\n\nReturn subject line and email body only.",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are a professional sales email writer for Beyond Ideation Services.  Use this sales playbook knowledge to write the email: {{ $json.documents }}  Tone rules: - Professional but friendly - Lead with value, not features - Keep subject line under 8 words - Open with company-specific observation - Offer a 15 minute discovery call - Sign off: \"Looking forward to connecting\" - Never be pushy — be consultative"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1552,
+        0
+      ],
+      "id": "c79d6ebc-afc8-4de2-8989-a5d1c1831e87",
+      "name": "RAG Agent"
+    },
+    {
+      "parameters": {
+        "mode": "load",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "smartlead-rag",
+          "mode": "list",
+          "cachedResultName": "smartlead-rag"
+        },
+        "prompt": "={{ $json.score }} lead from {{ $json.company }} - email writing style and follow up strategy",
+        "topK": 3,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        1184,
+        0
+      ],
+      "id": "8d100c1d-042a-4bfd-8e20-5efbfc10b28a",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "WwB5CP7NpwTu3JgL",
+          "name": "Pinecone account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1072,
+        320
+      ],
+      "id": "677ef8cc-4c45-48bd-b99a-d8d9d728d862",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "aeRYShlomstXUfJC",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1232,
+        272
+      ],
+      "id": "fdfa143c-186f-470c-b537-48ce937c3062",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "aeRYShlomstXUfJC",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Code in JavaScript1').item.json.score }}",
+                    "rightValue": "HOT",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "6a0a2368-e7f1-4207-8c6e-c3a4b32f9471"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "a310659b-1ef2-49eb-b434-dcffb7ff3d82",
+                    "leftValue": "={{ $('Code in JavaScript1').item.json.score }}",
+                    "rightValue": "WARM",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "a812781e-05ba-41dd-91b2-771c711e429e",
+                    "leftValue": "={{ $('Code in JavaScript1').item.json.score }}",
+                    "rightValue": "COLD",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1536,
+        720
+      ],
+      "id": "4dbc4fd7-7416-4944-bd75-eb0016c96b27",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Code in JavaScript1').item.json.email }}",
+        "subject": "={{ $('RAG Agent').item.json.text.split('\\n')[0] }}",
+        "message": "={{ $('RAG Agent').item.json.text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2192,
+        224
+      ],
+      "id": "da3281aa-d1b7-431b-8939-7ce4749231ba",
+      "name": "Send a message",
+      "webhookId": "68fe4d17-a50a-4216-9854-8dfcd89e4180",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "HoQc0aAckEhRTGW1",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0B2QR0HRB6",
+          "mode": "list",
+          "cachedResultName": "lead-score"
+        },
+        "text": "=🔥 HOT LEAD — Email Auto-Sent!  Name: {{ $('Code in JavaScript1').item.json.name }} Company: {{ $('Code in JavaScript1').item.json.company }} Email: {{ $('Code in JavaScript1').item.json.email }} Score: HOT 🔥 Reason: {{ $('Code in JavaScript1').item.json.reason }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        2400,
+        224
+      ],
+      "id": "4f9d4bf7-f989-45ec-a7b4-24ed56d3e2c5",
+      "name": "Send a message1",
+      "webhookId": "ebaeb859-922f-476d-94a8-7f56b73304a8",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "9M3N4uePtCC0mZZC",
+          "name": "Slack OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1QQmIeiKtjpwCqI-G1IB6ObQOR9EpigyTDtH1ode5LHQ",
+          "mode": "list",
+          "cachedResultName": "SmartLead AI — Lead Scoring Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QQmIeiKtjpwCqI-G1IB6ObQOR9EpigyTDtH1ode5LHQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QQmIeiKtjpwCqI-G1IB6ObQOR9EpigyTDtH1ode5LHQ/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "name": "={{ $('Code in JavaScript1').item.json.name }}",
+            "email": "={{ $('Code in JavaScript1').item.json.email }}",
+            "company": "={{ $('Code in JavaScript1').item.json.company }}",
+            "source ": "={{ $('Webhook').item.json.body.source }}",
+            "score": "={{ $('Code in JavaScript1').item.json.score }}",
+            "reason": "={{ $('Code in JavaScript1').item.json.reason }}",
+            "next_action": "={{ $('Code in JavaScript1').item.json.next_action }}",
+            "created_at": "={{ $now }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source ",
+              "displayName": "source ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "score",
+              "displayName": "score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "next_action",
+              "displayName": "next_action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2816,
+        224
+      ],
+      "id": "f931a210-469a-412b-baf6-890992d085a8",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Rlf1fLBlO9PWzkvi",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0B2QR0HRB6",
+          "mode": "list",
+          "cachedResultName": "lead-score"
+        },
+        "text": "=⚡ WARM LEAD — Review & Send Manually\n\nName: {{ $('Code in JavaScript1').item.json.name }}\nCompany: {{ $('Code in JavaScript1').item.json.company }}\nEmail: {{ $('Code in JavaScript1').item.json.email }}\nSource: {{ $('Webhook').item.json.body.source }}\n\nAI Score: WARM 🟡\nReason: {{ $('Code in JavaScript1').item.json.reason }}\nNext Action: {{ $('Code in JavaScript1').item.json.next_action }}\n\n📧 Suggested Email (Review Before Sending):\n{{ $('RAG Agent').item.json.text }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        2048,
+        640
+      ],
+      "id": "b1288b7a-b746-4a39-b00a-247f564d5027",
+      "name": "Send a message2",
+      "webhookId": "c5db2265-026b-4e89-a2df-ba439cd0878f",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "9M3N4uePtCC0mZZC",
+          "name": "Slack OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1QQmIeiKtjpwCqI-G1IB6ObQOR9EpigyTDtH1ode5LHQ",
+          "mode": "list",
+          "cachedResultName": "SmartLead AI — Lead Scoring Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QQmIeiKtjpwCqI-G1IB6ObQOR9EpigyTDtH1ode5LHQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QQmIeiKtjpwCqI-G1IB6ObQOR9EpigyTDtH1ode5LHQ/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "name": "={{ $('Code in JavaScript1').item.json.name }}",
+            "email": "={{ $('Code in JavaScript1').item.json.email }}",
+            "company": "={{ $('Code in JavaScript1').item.json.company }}",
+            "source ": "={{ $('Webhook').item.json.body.source }}",
+            "score": "={{ $('Code in JavaScript1').item.json.score }}",
+            "reason": "={{ $('Code in JavaScript1').item.json.reason }}",
+            "next_action": "={{ $('Code in JavaScript1').item.json.next_action }}",
+            "created_at": "={{ $now }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source ",
+              "displayName": "source ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "score",
+              "displayName": "score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "next_action",
+              "displayName": "next_action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2432,
+        656
+      ],
+      "id": "de6f5c4d-474c-44b9-ad3d-7202ad757668",
+      "name": "Append row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Rlf1fLBlO9PWzkvi",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1QQmIeiKtjpwCqI-G1IB6ObQOR9EpigyTDtH1ode5LHQ",
+          "mode": "list",
+          "cachedResultName": "SmartLead AI — Lead Scoring Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QQmIeiKtjpwCqI-G1IB6ObQOR9EpigyTDtH1ode5LHQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QQmIeiKtjpwCqI-G1IB6ObQOR9EpigyTDtH1ode5LHQ/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "name": "={{ $('Code in JavaScript1').item.json.name }}",
+            "email": "={{ $('Code in JavaScript1').item.json.email }}",
+            "company": "={{ $('Code in JavaScript1').item.json.company }}",
+            "source ": "={{ $('Webhook').item.json.body.source }}",
+            "score": "={{ $('Code in JavaScript1').item.json.score }}",
+            "reason": "={{ $('Code in JavaScript1').item.json.reason }}",
+            "next_action": "={{ $('Code in JavaScript1').item.json.next_action }}",
+            "created_at": "={{ $now }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source ",
+              "displayName": "source ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "score",
+              "displayName": "score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "next_action",
+              "displayName": "next_action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1984,
+        864
+      ],
+      "id": "e5d22185-5f68-42b8-953f-ea1d01dfe5d7",
+      "name": "Append row in sheet2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Rlf1fLBlO9PWzkvi",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [$input.first()];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1904,
+        0
+      ],
+      "id": "64297e9a-43e8-4acf-a4fc-4b62c5ac88e7",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "36059d0d-cf78-80e0-b2ff-cdafbf393829",
+          "mode": "list",
+          "cachedResultName": "SmartLead-Ai",
+          "cachedResultUrl": "https://www.notion.so/36059d0dcf7880e0b2ffcdafbf393829"
+        },
+        "title": "={{ $('Code in JavaScript1').item.json.name }} — {{ $('Code in JavaScript1').item.json.company }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Email|email",
+              "emailValue": "={{ $('Code in JavaScript1').item.json.email }}"
+            },
+            {
+              "key": "Company|rich_text",
+              "textContent": "={{ $('Code in JavaScript1').item.json.company }}"
+            },
+            {
+              "key": "Source|rich_text",
+              "textContent": "={{ $('Webhook').item.json.body.source }}"
+            },
+            {
+              "key": "Score|select",
+              "selectValue": "={{ $('Code in JavaScript1').item.json.score }}"
+            },
+            {
+              "key": "Next Action|rich_text",
+              "textContent": "={{ $('Code in JavaScript1').item.json.next_action }}"
+            },
+            {
+              "key": "Email Sent|checkbox",
+              "checkboxValue": true
+            },
+            {
+              "key": "Created At|date",
+              "date": "={{ $now }}"
+            },
+            {
+              "key": "Reason|rich_text",
+              "textContent": "={{ $('Code in JavaScript1').item.json.reason }}"
+            },
+            {
+              "key": "Research Summary|rich_text",
+              "richText": true,
+              "text": {
+                "text": [
+                  {
+                    "text": "={{ $('Code in JavaScript').item.json.research_summary }}",
+                    "annotationUi": {}
+                  }
+                ]
+              }
+            },
+            {
+              "key": "Name|title",
+              "title": "={{ $('Code in JavaScript1').item.json.name }} — {{ $('Code in JavaScript1').item.json.company }}\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        2576,
+        224
+      ],
+      "id": "451d5a3f-7305-43f5-a017-7e274f8b7e5d",
+      "name": "Create a database page",
+      "credentials": {
+        "notionOAuth2Api": {
+          "id": "sVJCOn81Y2aftQKH",
+          "name": "Notion OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "email": "={{ $('Code in JavaScript1').item.json.email }}",
+        "addOptions": {}
+      },
+      "type": "@zerobounce/n8n-nodes-zerobounce.zeroBounce",
+      "typeVersion": 1,
+      "position": [
+        1744,
+        224
+      ],
+      "id": "b5a6d634-c063-408a-9156-b800159b536d",
+      "name": "Validate an email",
+      "credentials": {
+        "zeroBounceApi": {
+          "id": "wHMXjKvAhN0aLdyW",
+          "name": "ZeroBounce account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "37795322-c318-4bae-b706-04e0aa580061",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "valid",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1952,
+        224
+      ],
+      "id": "4bc5b5dc-11b0-425c-a5d1-247c913b6bed",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0B2QR0HRB6",
+          "mode": "list",
+          "cachedResultName": "lead-score"
+        },
+        "text": "=⚠️ Invalid Email Detected — Do Not Send!  Lead: {{ $('Code in JavaScript1').item.json.name }} Company: {{ $('Code in JavaScript1').item.json.company }} Email: {{ $('Code in JavaScript1').item.json.email }} ZeroBounce Status: {{ $('ZeroBounce').item.json.status }}  Action Required: Manual review before contacting ❌",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        1824,
+        432
+      ],
+      "id": "dde02ddf-fcf8-44d3-bba6-fdc09f471f85",
+      "name": "Send a message3",
+      "webhookId": "bda586ef-91b6-42bc-892a-ba667186e8cd",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "9M3N4uePtCC0mZZC",
+          "name": "Slack OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store": {
+      "main": [
+        [
+          {
+            "node": "RAG Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "RAG Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RAG Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Validate an email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        [
+          {
+            "node": "Create a database page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message2": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a database page": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate an email": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "73b6b6d9-e7f1-4864-a3f3-746e07760852",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a0dc71cf60afb79b7030be4a5ed03a056a0de6e28337114c2c59da2b1f418f68"
+  },
+  "id": "NrM9QYIqKZuzeHDv",
+  "tags": []
+}

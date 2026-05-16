@@ -1,0 +1,144 @@
+{
+  "name": "ProspectPilot AI RAG Ingestion",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a0e2ef9a-c50d-4223-95c4-73e18bd09e46",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "const playbook = `SALES PLAYBOOK — ProspectPilot\n\nOur Tone: Professional but friendly. Always lead with value, not features.\n\nEmail Style:\n- Keep subject lines under 8 words\n- Open with a company-specific observation from research\n- Mention one specific pain point relevant to their industry\n- Offer a clear next step — always a 15 minute discovery call\n- Sign off with: \"Looking forward to connecting\"\n- Never be pushy — be consultative\n\nTarget Customer Profile:\n- B2B companies with 10-500 employees\n- Decision makers: CEO, CTO, Head of Sales, Operations Manager\n- Pain points: manual processes, slow lead response, no automation\n\nCase Studies:\n- Helped TechPK increase lead conversion by 40% using n8n automation\n- Automated full sales pipeline for 3 Lahore-based startups\n- Built AI lead scoring system saving sales teams 10 hours per week\n- Reduced lead response time from 24 hours to under 5 minutes\n\nOur Services:\n- n8n automation consulting and setup\n- AI-powered lead management systems\n- Custom workflow development\n- CRM integration and automation\n\nPricing Approach:\n- Always anchor with value before mentioning price\n- Start with a free audit or discovery call\n- Package pricing: Starter $500, Growth $1500, Enterprise custom\n\nFollow Up Strategy:\n- HOT leads: Contact within 1 hour, follow up after 3 days\n- WARM leads: Contact within 24 hours, follow up after 1 week\n- Always personalize every touchpoint with company research`;\n\n// Split into chunks\nconst chunks = playbook.split('\\n\\n').filter(c => c.trim().length > 0);\n\nreturn chunks.map((chunk, i) => ({\n  json: {\n    id: `playbook-chunk-${i}`,\n    text: chunk.trim()\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "6371d9bb-7496-47fe-b2c5-a73f8eb40fb1",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "smartlead-rag",
+          "mode": "list",
+          "cachedResultName": "smartlead-rag"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        464,
+        0
+      ],
+      "id": "adcf7626-ed22-42bd-8cf8-d9d1fe000651",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "WwB5CP7NpwTu3JgL",
+          "name": "Pinecone account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        544,
+        176
+      ],
+      "id": "f4c91127-9556-488a-8ef5-0cf3adfcb78b",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        352,
+        256
+      ],
+      "id": "3b79355b-161a-4cc8-8042-7ee9e9edca52",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "aeRYShlomstXUfJC",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "bc788b51-765b-4de6-888e-603a3a142595",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a0dc71cf60afb79b7030be4a5ed03a056a0de6e28337114c2c59da2b1f418f68"
+  },
+  "id": "HaoW6AucqW6OpnkD",
+  "tags": []
+}
