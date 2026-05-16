@@ -137,7 +137,8 @@ To generate hyper-personalized outreach emails.
 
 # 📚 RAG Pipeline (Retrieval-Augmented Generation)
 
-![RAG Pipeline](./screenshots/ProspectPilot AI - RAG INGESTION.png)
+<img width="1291" height="553" alt="rag-ingestion" src="https://github.com/user-attachments/assets/8c379bc4-8106-4555-a968-7cc3780077ab" />
+
 
 ## How It Works
 
@@ -165,7 +166,8 @@ Relevant chunks are injected into the AI email writer.
 
 # 🔥 End-to-End Workflow
 
-![End-to-End Pipeline](.screenshots/ProspectPilot AI - Workflow Canvas.png)
+<img width="1360" height="522" alt="main-workflow" src="https://github.com/user-attachments/assets/f9ea83ed-bbb4-4c8c-922c-8daee10ef365" />
+
 
 ## Full Workflow
 
