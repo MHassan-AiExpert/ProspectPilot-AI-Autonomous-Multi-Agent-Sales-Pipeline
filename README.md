@@ -137,7 +137,7 @@ To generate hyper-personalized outreach emails.
 
 # 📚 RAG Pipeline (Retrieval-Augmented Generation)
 
-![RAG Pipeline](./screenshots/rag-pipeline.png)
+![RAG Pipeline](./screenshots/ProspectPilot AI - RAG INGESTION.png)
 
 ## How It Works
 
