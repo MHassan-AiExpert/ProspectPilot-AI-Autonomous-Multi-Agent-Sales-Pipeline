@@ -165,7 +165,7 @@ Relevant chunks are injected into the AI email writer.
 
 # 🔥 End-to-End Workflow
 
-![End-to-End Pipeline](./screenshots/end-to-end-pipeline.png)
+![End-to-End Pipeline](.screenshots/ProspectPilot AI - Workflow Canvas.png)
 
 ## Full Workflow
 
